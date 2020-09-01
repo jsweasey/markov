@@ -1,0 +1,7 @@
+add new weightings to create different relationships between pair words, e.g. higher weight to short words.
+
+add method to catagorize each word/character and allow for weighting so that certatin sequences that make more sense occur e.g. noun, verb, punctuation
+
+structure generator of the catagories needed (include discount factor to stop long chaining), then fill in with word pairs that fit the structure
+
+add context (e.g. string to work from), use uniqueness of words to determine important words and change probability of certain words based off of the context
