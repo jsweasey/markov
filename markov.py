@@ -4,19 +4,16 @@ import math as math
 import random as random
 import json as json
 import os as os
+from itertools import count
 
 class model():
 
     class word():
 
-        def count(start=0):
-            index = start
-            while True:
-                yield index
-                index += 1
+        _id = count(0)
 
-        def __init__(self, word, category='uncatagorized', counter=0):
-            self.index = int
+        def __init__(self, word:str, category='uncatagorized', counter=0):
+            self.id = next(self._id)
             self.word = word
             self.prev = defaultdict(int)
             self.next = defaultdict(int)
@@ -26,9 +23,9 @@ class model():
 
     def parseSentence(self, sample_text: str, sentence_stopper: str,) -> list:
 
-        char, prev_char, word = ''
+        char, prev_char, word = '','',''
         sentence_number = 0
-        current_sentence, parsed_sentences = []
+        current_sentence, parsed_sentences = [],[]
 
         for char in sample_text:
             if char == sentence_stopper and (len(word) > 0 or len(current_sentence[-1:])):
@@ -61,36 +58,87 @@ class model():
 
         for sentence in parsed_sentences:
             word_counter = 0
+            prev_word = ''
+            print('NEW SENTENCE')
             for word in sentence:
                 if word in list(self.words_indexed.keys()):
                     if word_counter == 0:
+                        print('start %s %s, sentence length = %s' %(word, word_counter, len(sentence)))
                         self.words_indexed[word].prev['>'] += 1
                         self.words_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
-                    elif word_counter == len(sentence):
+                    elif word_counter == (len(sentence)-1):
+                        print('end %s %s' %(word, word_counter))
                         self.words_indexed[word].prev[prev_word] += 1
                         self.words_indexed[word].next['<'] += 1
-                        self.words_indexed[word].counter += 1
-                        word_counter += 1
-                    else:
-                        self.words_indexed[word].prev[prev_word] += 1
                         self.words_indexed[prev_word].next[word] += 1
                         self.words_indexed[word].counter += 1
                         word_counter += 1
+                    else:
+                        print('%s %s' %(word, word_counter))
+                        self.words_indexed[word].prev[prev_word] += 1
+                        self.words_indexed[prev_word].next[word] += 1
+                        self.words_indexed[word].counter += 1
+                        prev_word = word
+                        word_counter += 1
                 else:
-                    self.words_indexed.update({word:word()})
+                    if word_counter == 0:
+                        print('NEW start %s %s, sentence length = %s' %(word, word_counter, len(sentence)))
+                        self.words_indexed.update({word:self.word(word)})
+                        self.words_indexed[word].prev['>'] += 1
+                        self.words_indexed[word].counter += 1
+                        prev_word = word
+                        word_counter += 1
+                    elif word_counter == (len(sentence)-1):
+                        print('NEW end %s %s' %(word, word_counter))
+                        self.words_indexed.update({word:self.word(word)})
+                        self.words_indexed[word].prev[prev_word] += 1
+                        self.words_indexed[word].next['<'] += 1
+                        self.words_indexed[prev_word].next[word] += 1
+                        self.words_indexed[word].counter += 1
+                        word_counter += 1
+                    else:
+                        print('NEW %s %s' %(word, word_counter))
+                        self.words_indexed.update({word:self.word(word)})
+                        self.words_indexed[word].prev[prev_word] += 1
+                        self.words_indexed[prev_word].next[word] += 1
+                        self.words_indexed[word].counter += 1
+                        prev_word = word
+                        word_counter += 1
 
+    def initializeModel(self):
+        file_location = self.file_location
+        if self.file_good:
+            sample_text = self.loadSampleText(file_location)
+            sample_text2parsed_sentences = self.parseSentence(sample_text, self.sentence_stopper)
+            self.createModel(sample_text2parsed_sentences)
+            print('Initialized model succesfully')
+            print(self.words_indexed['please'].next)
+        else:
+            print('Issue with %s, please re initialize' %file_location)
 
+    def checkFile(self, file_location : str) -> bool:
+
+        if (os.path.exists(file_location)) and (os.path.getsize(file_location) > 0):
+            return_bool = True
+        elif os.path.exists(file_location) == False:
+            return_bool = False
+        elif os.path.getsize(file_location) == 0:
+            return_bool = False
+
+        return return_bool
 
     def __init__(self, file_location: str, sentence_stopper: str, ):
 
         self.words_indexed = {}
+        self.file_good = False
+        self.file_location = file_location
+        self.sentence_stopper = sentence_stopper
 
-        if (os.path.exists(file_location)) and (os.path.getsize(file_location) > 0):
-            sample_text = self.loadSampleText(file_location)
-            sample_text2parsed_sentences = self.parseSentence(sample_text, sentence_stopper)
-        elif os.path.exists(file_location) == False:
-            print('File %s does not exist!' %file_location)
-        elif os.path.getsize(file_location) == 0:
-            print('File %s has no content!' %file_location)
+        self.file_good = self.checkFile(self.file_location)
+        if self.file_good == False:
+            print('File %s is not good, please check' %self.file_location)
+
+m = model('sampletext.txt','.')
+m.initializeModel()
