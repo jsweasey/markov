@@ -59,24 +59,21 @@ class model():
         for sentence in parsed_sentences:
             word_counter = 0
             prev_word = ''
-            print('NEW SENTENCE')
             for word in sentence:
                 if word in list(self.words_indexed.keys()):
                     if word_counter == 0:
-                        print('start %s %s, sentence length = %s' %(word, word_counter, len(sentence)))
                         self.words_indexed[word].prev['>'] += 1
+                        self.words_indexed['>'].next[word] += 1
                         self.words_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
                     elif word_counter == (len(sentence)-1):
-                        print('end %s %s' %(word, word_counter))
                         self.words_indexed[word].prev[prev_word] += 1
                         self.words_indexed[word].next['<'] += 1
                         self.words_indexed[prev_word].next[word] += 1
                         self.words_indexed[word].counter += 1
                         word_counter += 1
                     else:
-                        print('%s %s' %(word, word_counter))
                         self.words_indexed[word].prev[prev_word] += 1
                         self.words_indexed[prev_word].next[word] += 1
                         self.words_indexed[word].counter += 1
@@ -84,14 +81,13 @@ class model():
                         word_counter += 1
                 else:
                     if word_counter == 0:
-                        print('NEW start %s %s, sentence length = %s' %(word, word_counter, len(sentence)))
                         self.words_indexed.update({word:self.word(word)})
                         self.words_indexed[word].prev['>'] += 1
+                        self.words_indexed['>'].next[word] += 1
                         self.words_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
                     elif word_counter == (len(sentence)-1):
-                        print('NEW end %s %s' %(word, word_counter))
                         self.words_indexed.update({word:self.word(word)})
                         self.words_indexed[word].prev[prev_word] += 1
                         self.words_indexed[word].next['<'] += 1
@@ -99,7 +95,6 @@ class model():
                         self.words_indexed[word].counter += 1
                         word_counter += 1
                     else:
-                        print('NEW %s %s' %(word, word_counter))
                         self.words_indexed.update({word:self.word(word)})
                         self.words_indexed[word].prev[prev_word] += 1
                         self.words_indexed[prev_word].next[word] += 1
@@ -109,12 +104,12 @@ class model():
 
     def initializeModel(self):
         file_location = self.file_location
+        self.words_indexed.update({'>':self.word('>')}) #MAYBE THINK ABOUT MOVING THIS INITIALIZATION
         if self.file_good:
             sample_text = self.loadSampleText(file_location)
             sample_text2parsed_sentences = self.parseSentence(sample_text, self.sentence_stopper)
             self.createModel(sample_text2parsed_sentences)
             print('Initialized model succesfully')
-            print(self.words_indexed['please'].next)
         else:
             print('Issue with %s, please re initialize' %file_location)
 
