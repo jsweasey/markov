@@ -125,15 +125,107 @@ class model():
         return return_bool
 
     def __init__(self, file_location: str, sentence_stopper: str, ):
-
         self.words_indexed = {}
         self.file_good = False
         self.file_location = file_location
         self.sentence_stopper = sentence_stopper
-
         self.file_good = self.checkFile(self.file_location)
+
         if self.file_good == False:
             print('File %s is not good, please check' %self.file_location)
 
+    def wordCanBeSeed(self, word2check:str) -> bool:
+        return_bool = False
+        seed_words = list(self.words_indexed['>'].next.keys())
+        if (word2check in seed_words):
+            return_bool = True
+
+        return return_bool
+
+    def nextGenWord(self, word2check:str) -> str:
+        prob_list = []
+        next_list = list(self.words_indexed[word2check].next.keys())
+        for word in next_list:
+            for i in range(self.words_indexed[word2check].next.get(word)):
+                prob_list.append(word)
+        word_return = prob_list[random.randint(0, (len(prob_list)-1))]
+
+        return word_return
+
+    def list2str(self, list2convert:list) -> str:
+        word_return = ''
+        for word in list2convert:
+            word_return += ('%s ' %word)
+
+        return word_return
+
+
+    def generate(self, **keyword_args): #args = seed_word, min_length, sentence_num,
+
+        seed = ''
+        m_len = 0
+        no_min = False
+        past_min = False
+        s_num = 10
+        w_num = 0
+        g_sentence = []
+        g_sentences = []
+
+        #checking kwargs
+        if ('seed_word' in keyword_args and self.wordCanBeSeed(keyword_args['seed_word'])):
+            seed = keyword_args['seed_word']
+        else:
+            rand_int = random.randint(0, len(self.words_indexed['>'].next))
+            seed = list(self.words_indexed['>'].next.keys())[rand_int]
+        if ('min_length' in keyword_args and isinstance(keyword_args['min_length'], int)):
+            m_len = keyword_args['min_length']
+        else:
+            no_min = True
+        if ('sentence_num' in keyword_args and isinstance(keyword_args['sentence_num'], int)):
+            s_num = keyword_args['sentence_num']
+        print('seed: %s, m_len: %s, s_num: %s' %(seed, m_len, s_num))
+
+        for x in range(s_num):
+            w_num = 0
+            n_word = ''
+            g_sentence = []
+            if no_min:
+                past_min = True
+            else:
+                past_min = False
+            while True:
+                if (w_num > m_len) and (past_min == False):
+                    past_min = True
+                if n_word == '<':
+                    g_sentences.append(self.list2str(g_sentence))
+                    break
+                if w_num == 0:
+                    g_sentence.append(seed)
+                    n_word = self.nextGenWord(seed)
+                else:
+                    g_sentence.append(n_word)
+                    if past_min == False:
+                        while True:
+                            if n_word == '<':
+                                g_sentence_o = g_sentence
+                                g_sentence = g_sentence_o[:-1]
+                                n_word = g_sentence[-1]
+                            n_word = self.nextGenWord(n_word)
+                            if n_word != '<':
+                                break
+                    else:
+                        n_word = self.nextGenWord(n_word)
+                w_num += 1
+        print(g_sentences)
+
+
+
+
+
+
+
+
+
 m = model('sampletext.txt','.')
 m.initializeModel()
+m.generate(min_length=15)
