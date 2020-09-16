@@ -8,13 +8,13 @@ from itertools import count
 
 class model():
 
-    class word():
+    class gram():
 
         _id = count(0)
 
-        def __init__(self, word:str, category='uncatagorized', counter=0):
+        def __init__(self, gram:str, category='uncatagorized', counter=0):
             self.id = next(self._id)
-            self.word = word
+            self.gram = gram
             self.prev = defaultdict(int)
             self.next = defaultdict(int)
             self.category = category
@@ -47,7 +47,6 @@ class model():
         if add_extra:
             if len(current_sentence) > 0:
                 parsed_sentences.append(current_sentence)
-        print(parsed_sentences)
         return parsed_sentences
 
     def loadSampleText(self, file_location: str,) -> str:
@@ -67,58 +66,54 @@ class model():
             prev_word = ''
             sentence_len.append(len(sentence))
             for word in sentence:
-                if word in list(self.words_indexed.keys()):
+                if word in list(self.grams_indexed.keys()):
                     if word_counter == 0:
-                        self.words_indexed[word].prev['>'] += 1
-                        self.words_indexed['>'].next[word] += 1
-                        self.words_indexed[word].counter += 1
+                        self.grams_indexed[word].prev['>'] += 1
+                        self.grams_indexed['>'].next[word] += 1
+                        self.grams_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
                     elif word_counter == (len(sentence)-1):
-                        self.words_indexed[word].prev[prev_word] += 1
-                        self.words_indexed[word].next['<'] += 1
-                        self.words_indexed[prev_word].next[word] += 1
-                        self.words_indexed[word].counter += 1
+                        self.grams_indexed[word].prev[prev_word] += 1
+                        self.grams_indexed[word].next['<'] += 1
+                        self.grams_indexed[prev_word].next[word] += 1
+                        self.grams_indexed[word].counter += 1
                         word_counter += 1
                     else:
-                        self.words_indexed[word].prev[prev_word] += 1
-                        self.words_indexed[prev_word].next[word] += 1
-                        self.words_indexed[word].counter += 1
+                        self.grams_indexed[word].prev[prev_word] += 1
+                        self.grams_indexed[prev_word].next[word] += 1
+                        self.grams_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
                 else:
                     if word_counter == 0:
-                        self.words_indexed.update({word:self.word(word)})
-                        self.words_indexed[word].prev['>'] += 1
-                        self.words_indexed['>'].next[word] += 1
-                        self.words_indexed[word].counter += 1
+                        self.grams_indexed.update({word:self.word(word)})
+                        self.grams_indexed[word].prev['>'] += 1
+                        self.grams_indexed['>'].next[word] += 1
+                        self.grams_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
                     elif word_counter == (len(sentence)-1):
-                        self.words_indexed.update({word:self.word(word)})
-                        self.words_indexed[word].prev[prev_word] += 1
-                        self.words_indexed[word].next['<'] += 1
-                        self.words_indexed[prev_word].next[word] += 1
-                        self.words_indexed[word].counter += 1
+                        self.grams_indexed.update({word:self.word(word)})
+                        self.grams_indexed[word].prev[prev_word] += 1
+                        self.grams_indexed[word].next['<'] += 1
+                        self.grams_indexed[prev_word].next[word] += 1
+                        self.grams_indexed[word].counter += 1
                         word_counter += 1
                     else:
-                        self.words_indexed.update({word:self.word(word)})
-                        self.words_indexed[word].prev[prev_word] += 1
-                        self.words_indexed[prev_word].next[word] += 1
-                        self.words_indexed[word].counter += 1
+                        self.grams_indexed.update({word:self.word(word)})
+                        self.grams_indexed[word].prev[prev_word] += 1
+                        self.grams_indexed[prev_word].next[word] += 1
+                        self.grams_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
 
         self.avg_sentence_len = sum(sentence_len)/len(sentence_len)
-<<<<<<< HEAD
-=======
-        print(self.avg_sentence_len)
->>>>>>> d85a6a3501ec465c214efbfb0419a976022a4949
 
 
     def initializeModel(self):
         file_location = self.file_location
-        self.words_indexed.update({'>':self.word('>')}) #MAYBE THINK ABOUT MOVING THIS INITIALIZATION
+        self.grams_indexed.update({'>':self.gram('>')}) #MAYBE THINK ABOUT MOVING THIS INITIALIZATION
         if self.file_good:
             sample_text = self.loadSampleText(file_location)
             sample_text2parsed_sentences = self.parseSentence(sample_text, self.sentence_stopper)
@@ -139,7 +134,7 @@ class model():
         return return_bool
 
     def __init__(self, file_location: str, sentence_stopper: str, **keyword_args): #ARGS= auto_init(bool)
-        self.words_indexed = {}
+        self.grams_indexed = {}
         self.file_good = False
         self.file_location = file_location
         self.sentence_stopper = sentence_stopper
@@ -153,7 +148,7 @@ class model():
 
     def wordCanBeSeed(self, word2check:str) -> bool:
         return_bool = False
-        seed_words = list(self.words_indexed['>'].next.keys())
+        seed_words = list(self.grams_indexed['>'].next.keys())
         if (word2check in seed_words):
             return_bool = True
 
@@ -161,9 +156,9 @@ class model():
 
     def nextGenWord(self, word2check:str) -> str:
         prob_list = []
-        next_list = list(self.words_indexed[word2check].next.keys())
+        next_list = list(self.grams_indexed[word2check].next.keys())
         for word in next_list:
-            for i in range(self.words_indexed[word2check].next.get(word)):
+            for i in range(self.grams_indexed[word2check].next.get(word)):
                 prob_list.append(word)
         word_return = prob_list[random.randint(0, (len(prob_list)-1))]
 
@@ -192,8 +187,8 @@ class model():
         if ('seed_word' in keyword_args and self.wordCanBeSeed(keyword_args['seed_word'])):
             seed = keyword_args['seed_word']
         else:
-            rand_int = random.randint(0, len(self.words_indexed['>'].next))
-            seed = list(self.words_indexed['>'].next.keys())[rand_int]
+            rand_int = random.randint(0, len(self.grams_indexed['>'].next)-1)
+            seed = list(self.grams_indexed['>'].next.keys())[rand_int]
         if ('min_length' in keyword_args and isinstance(keyword_args['min_length'], int)):
             m_len = keyword_args['min_length']
         else:
@@ -234,4 +229,4 @@ class model():
 
 m = model('sampletext.txt','.',auto_init=True)
 #m.initializeModel()
-m.generate(min_length=50)
+m.generate()
