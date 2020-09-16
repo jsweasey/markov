@@ -21,7 +21,7 @@ class model():
             self.counter = counter
 
 
-    def parseSentence(self, sample_text: str, sentence_stopper: str,) -> list:
+    def parseSentence(self, sample_text: str, sentence_stopper: str,) -> list: #TO AID IN SIMPLICITY, CURRENTLY REMOVES ALL NON-LETTER CHARACTERS E.G PUNCTUATION
 
         char, prev_char, word = '','',''
         sentence_number = 0
@@ -129,7 +129,7 @@ class model():
 
         return return_bool
 
-    def __init__(self, file_location: str, sentence_stopper: str, **keyword_args):
+    def __init__(self, file_location: str, sentence_stopper: str, **keyword_args): #ARGS= auto_init(bool)
         self.words_indexed = {}
         self.file_good = False
         self.file_location = file_location
