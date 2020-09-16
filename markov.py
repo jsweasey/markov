@@ -110,6 +110,10 @@ class model():
                         word_counter += 1
 
         self.avg_sentence_len = sum(sentence_len)/len(sentence_len)
+<<<<<<< HEAD
+=======
+        print(self.avg_sentence_len)
+>>>>>>> d85a6a3501ec465c214efbfb0419a976022a4949
 
 
     def initializeModel(self):
