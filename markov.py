@@ -205,38 +205,24 @@ class model():
                 if (w_num > m_len) and (past_min == False):
                     past_min = True
                 if n_word == '<':
-                    g_sentences.append(self.list2str(g_sentence))
-                    break
+                    if (w_num > m_len) or (past_min):
+                        g_sentences.append(self.list2str(g_sentence))
+                        break
+                    else:
+                        g_sentence = []
+                        n_word = seed
                 if w_num == 0:
                     g_sentence.append(seed)
                     n_word = self.nextGenWord(seed)
                 else:
                     g_sentence.append(n_word)
-                    if past_min == False:
-                        while True:
-                            if n_word == '<':
-                                g_sentence_o = g_sentence
-                                g_sentence = g_sentence_o[:-1]
-                                n_word = g_sentence[-1]
-                            n_word = self.nextGenWord(n_word)
-                            if n_word != '<':
-                                break
-                    else:
+                    if n_word != '<':
                         n_word = self.nextGenWord(n_word)
-                w_num += 1
+                w_num = len(g_sentence)
+
         print(g_sentences)
 
 
-
-
-
-
-
-
-
-m = model('sampletext.txt','.')
-m.initializeModel()
-m.generate(min_length=15)
 m = model('sampletext.txt','.',auto_init=True)
 #m.initializeModel()
-m.generate(seed_word='boris', min_length=50)
+m.generate(min_length=50)
