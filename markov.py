@@ -60,10 +60,12 @@ class model():
     def createModel(self, parsed_sentences: list,):
 
         word_counter = 0
+        sentence_len = []
 
         for sentence in parsed_sentences:
             word_counter = 0
             prev_word = ''
+            sentence_len.append(len(sentence))
             for word in sentence:
                 if word in list(self.words_indexed.keys()):
                     if word_counter == 0:
@@ -106,6 +108,10 @@ class model():
                         self.words_indexed[word].counter += 1
                         prev_word = word
                         word_counter += 1
+
+        self.avg_sentence_len = sum(sentence_len)/len(sentence_len)
+        print(self.avg_sentence_len)
+
 
     def initializeModel(self):
         file_location = self.file_location
