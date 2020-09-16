@@ -124,7 +124,7 @@ class model():
 
         return return_bool
 
-    def __init__(self, file_location: str, sentence_stopper: str, ):
+    def __init__(self, file_location: str, sentence_stopper: str, **keyword_args):
         self.words_indexed = {}
         self.file_good = False
         self.file_location = file_location
@@ -133,6 +133,9 @@ class model():
 
         if self.file_good == False:
             print('File %s is not good, please check' %self.file_location)
+        else:
+            if ('auto_init' in keyword_args) and (keyword_args['auto_init'] == True):
+                self.initializeModel()
 
     def wordCanBeSeed(self, word2check:str) -> bool:
         return_bool = False
@@ -229,3 +232,6 @@ class model():
 m = model('sampletext.txt','.')
 m.initializeModel()
 m.generate(min_length=15)
+m = model('sampletext.txt','.',auto_init=True)
+#m.initializeModel()
+m.generate(seed_word='boris', min_length=50)
