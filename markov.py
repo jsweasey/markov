@@ -27,6 +27,8 @@ class model():
         sentence_number = 0
         current_sentence, parsed_sentences = [],[]
 
+        add_extra = False #VAR TO ALLOW FOR WORDS AFTER LAST SENTENCE STOPPER TO BE ADDED TO parsed_sentences
+
         for char in sample_text:
             if char == sentence_stopper and (len(word) > 0 or len(current_sentence[-1:])):
                 if len(word) > 0 : current_sentence.append(word.lower())
@@ -42,7 +44,10 @@ class model():
             else:
                 pass
             prev_char = char
-
+        if add_extra:
+            if len(current_sentence) > 0:
+                parsed_sentences.append(current_sentence)
+        print(parsed_sentences)
         return parsed_sentences
 
     def loadSampleText(self, file_location: str,) -> str:
