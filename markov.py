@@ -12,11 +12,12 @@ class model():
 
         _id = count(0)
 
-        def __init__(self, gram:str, category='uncatagorized', counter=0):
+        def __init__(self, item:str, start:str, end:str, category='uncatagorized', counter=0):
             self.id = next(self._id)
-            self.gram = gram
-            self.prev = defaultdict(int)
+            self.item = item
             self.next = defaultdict(int)
+            self.start = start
+            self.end = end
             self.category = category
             self.counter = counter
 
@@ -47,6 +48,7 @@ class model():
         if add_extra:
             if len(current_sentence) > 0:
                 parsed_sentences.append(current_sentence)
+
         return parsed_sentences
 
     def loadSampleText(self, file_location: str,) -> str:
@@ -58,62 +60,48 @@ class model():
 
     def createModel(self, parsed_sentences: list,):
 
-        word_counter = 0
+        item_counter = 0
         sentence_len = []
-
+        n_gram = self.n_gram
         for sentence in parsed_sentences:
-            word_counter = 0
-            prev_word = ''
+            item_counter = 0
             sentence_len.append(len(sentence))
-            for word in sentence:
-                if word in list(self.grams_indexed.keys()):
-                    if word_counter == 0:
-                        self.grams_indexed[word].prev['>'] += 1
-                        self.grams_indexed['>'].next[word] += 1
-                        self.grams_indexed[word].counter += 1
-                        prev_word = word
-                        word_counter += 1
-                    elif word_counter == (len(sentence)-1):
-                        self.grams_indexed[word].prev[prev_word] += 1
-                        self.grams_indexed[word].next['<'] += 1
-                        self.grams_indexed[prev_word].next[word] += 1
-                        self.grams_indexed[word].counter += 1
-                        word_counter += 1
+            for x,item in enumerate(sentence):
+                to_add, to_add_next = '', ''
+                to_add_list, to_add_next_list = [], []
+                for y in range(n_gram):
+                    if (x+y) > (len(sentence) - 1):
+                        break
                     else:
-                        self.grams_indexed[word].prev[prev_word] += 1
-                        self.grams_indexed[prev_word].next[word] += 1
-                        self.grams_indexed[word].counter += 1
-                        prev_word = word
-                        word_counter += 1
-                else:
-                    if word_counter == 0:
-                        self.grams_indexed.update({word:self.word(word)})
-                        self.grams_indexed[word].prev['>'] += 1
-                        self.grams_indexed['>'].next[word] += 1
-                        self.grams_indexed[word].counter += 1
-                        prev_word = word
-                        word_counter += 1
-                    elif word_counter == (len(sentence)-1):
-                        self.grams_indexed.update({word:self.word(word)})
-                        self.grams_indexed[word].prev[prev_word] += 1
-                        self.grams_indexed[word].next['<'] += 1
-                        self.grams_indexed[prev_word].next[word] += 1
-                        self.grams_indexed[word].counter += 1
-                        word_counter += 1
+                        to_add_list.append(sentence[(x+y)])
+                if len(to_add_list) == n_gram:
+                    to_add = ' '.join(to_add_list)
+                    for y in range(n_gram):
+                        if (x+y+n_gram) > (len(sentence) - 1):
+                            to_add_next = '<'
+                            to_add_next_list = []
+                            break
+                        else:
+                            to_add_next_list.append(sentence[(x+y+n_gram)])
+                    if len(to_add_next_list) > 0:
+                        to_add_next = ' '.join(to_add_next_list)
+                    if x == 0:
+                        if to_add not in list(self.grams_indexed.keys()):
+                            self.grams_indexed.update({to_add:self.gram(to_add, to_add_list[0], to_add_list[len(to_add_list)-1])})
+                        self.grams_indexed['>'].next[to_add] += 1
+                        self.grams_indexed[to_add].next[to_add_next] += 1
+                        self.grams_indexed[to_add].counter += 1
                     else:
-                        self.grams_indexed.update({word:self.word(word)})
-                        self.grams_indexed[word].prev[prev_word] += 1
-                        self.grams_indexed[prev_word].next[word] += 1
-                        self.grams_indexed[word].counter += 1
-                        prev_word = word
-                        word_counter += 1
-
+                        if to_add not in list(self.grams_indexed.keys()):
+                            self.grams_indexed.update({to_add:self.gram(to_add, to_add_list[0], to_add_list[len(to_add_list)-1])})
+                        self.grams_indexed[to_add].next[to_add_next] += 1
+                        self.grams_indexed[to_add].counter += 1
         self.avg_sentence_len = sum(sentence_len)/len(sentence_len)
 
 
     def initializeModel(self):
         file_location = self.file_location
-        self.grams_indexed.update({'>':self.gram('>')}) #MAYBE THINK ABOUT MOVING THIS INITIALIZATION
+        self.grams_indexed.update({'>':self.gram('>','>','>')}) #MAYBE THINK ABOUT MOVING THIS INITIALIZATION
         if self.file_good:
             sample_text = self.loadSampleText(file_location)
             sample_text2parsed_sentences = self.parseSentence(sample_text, self.sentence_stopper)
@@ -133,11 +121,12 @@ class model():
 
         return return_bool
 
-    def __init__(self, file_location: str, sentence_stopper: str, **keyword_args): #ARGS= auto_init(bool)
+    def __init__(self, file_location: str, sentence_stopper: str, n_gram: int, **keyword_args): #ARGS= auto_init(bool)
         self.grams_indexed = {}
         self.file_good = False
         self.file_location = file_location
         self.sentence_stopper = sentence_stopper
+        self.n_gram = n_gram
         self.file_good = self.checkFile(self.file_location)
 
         if self.file_good == False:
@@ -195,7 +184,7 @@ class model():
             no_min = True
         if ('sentence_num' in keyword_args and isinstance(keyword_args['sentence_num'], int)):
             s_num = keyword_args['sentence_num']
-        print('seed: %s, m_len: %s, s_num: %s' %(seed, m_len, s_num))
+        print('n_gram: %s, seed: %s, m_len: %s, s_num: %s' %(self.n_gram, seed, m_len, s_num))
 
         for x in range(s_num):
             w_num = 0
@@ -227,6 +216,6 @@ class model():
         print(g_sentences)
 
 
-m = model('sampletext.txt','.',auto_init=True)
+m = model('sampletext.txt','.',1,auto_init=True)
 #m.initializeModel()
 m.generate()
