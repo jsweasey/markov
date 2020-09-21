@@ -215,7 +215,22 @@ class model():
 
         print(g_sentences)
 
+    def statistics(self):
+        n_of_grams = len(self.grams_indexed)
+        sum_n, sum_u = 0,0
+        for gram in self.grams_indexed:
+            for next in list(self.grams_indexed[gram].next):
+                sum_n += self.grams_indexed[gram].next.get(next)
+                sum_u += 1
+        avg_n_next = sum_n/n_of_grams
+        avg_u_next = sum_u/n_of_grams
+        print('Average number of next grams: %s' %avg_n_next)
+        print('Average number of unique next grams: %s' %avg_u_next)
+        print('Number of grams: %s' %n_of_grams)
+        print('Average sentence length: %s' %self.avg_sentence_len)
+
 
 m = model('sampletext.txt','.',1,auto_init=True)
 #m.initializeModel()
 m.generate()
+m.statistics()
